@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+GitPython
+google-genai
+pylint
+python-dotenv
+pytest

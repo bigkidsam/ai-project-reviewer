@@ -7,10 +7,20 @@ __pycache__/
 .venv/
 venv/
 env/
+temp_repos/*
+backend/temp_repos/*
+backend/app/temp_repos/*
+backend/review_results/*
+backend/*.log
+!backend/temp_repos/
+!backend/temp_repos/.gitkeep
+!backend/review_results/
+!backend/review_results/.gitkeep
 
 # Environment files
 .env
 .env.*
+!.env.example
 
 # Editor/project files
 .vscode/

@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Project Reviewer</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+      :root {
+        --bg: #f4f1ea;
+        --surface: #fffdf8;
+        --ink: #1f2628;
+        --muted: #5b676c;
+        --line: #d6d0c5;
+        --brand: #145f54;
+        --brand-alt: #0f3d66;
+        --ok: #2e7d4f;
+        --warn: #b16f00;
+        --bad: #b53d2d;
+        --shadow: 0 12px 28px rgba(31, 38, 40, 0.08);
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 6%, rgba(20, 95, 84, 0.08), transparent 38%),
+          radial-gradient(circle at 94% 8%, rgba(15, 61, 102, 0.08), transparent 34%),
+          var(--bg);
+      }
+
+      .shell {
+        max-width: 1260px;
+        margin: 0 auto;
+        padding: 28px 20px 34px;
+      }
+
+      .topbar {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: end;
+      }
+
+      h1 { margin: 0; font-size: 34px; line-height: 1.08; }
+      .sub { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+
+      .status-pill {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 14px;
+        min-width: 130px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 600;
+        background: var(--surface);
+      }
+
+      .band {
+        margin-top: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        padding: 16px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: minmax(300px, 1fr) 120px 132px 1fr;
+        gap: 10px;
+        align-items: end;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        color: #435058;
+      }
+
+      input {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid #b8c2c5;
+        border-radius: 6px;
+        padding: 9px 10px;
+        font: inherit;
+        background: #fff;
+      }
+
+      button {
+        min-height: 42px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 0 14px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform .08s ease, box-shadow .2s ease;
+      }
+      button:active { transform: translateY(1px); }
+      .btn-primary { background: var(--brand); color: #fff; }
+      .btn-secondary { background: #fff; color: var(--ink); border-color: var(--line); }
+      button:disabled { opacity: .65; cursor: wait; }
+
+      .metrics {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .metric {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 12px;
+        min-height: 88px;
+      }
+      .metric .key { font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+      .metric .val { display: block; margin-top: 8px; font-size: 27px; font-weight: 700; }
+
+      .layout {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        gap: 12px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .panel-head {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .panel-head h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .panel-body { padding: 12px 14px; }
+
+      pre {
+        margin: 0;
+        min-height: 200px;
+        max-height: 440px;
+        overflow: auto;
+        background: #f7f5ef;
+        border: 1px solid #e4ded1;
+        border-radius: 6px;
+        padding: 12px;
+        font-size: 12px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        font-size: 12px;
+      }
+      th, td {
+        border-bottom: 1px solid #e8e1d5;
+        padding: 9px 6px;
+        vertical-align: top;
+        word-wrap: break-word;
+      }
+      th { text-align: left; color: #4c5a61; font-size: 11px; text-transform: uppercase; }
+
+      .sev { font-weight: 700; }
+      .sev.high, .sev.critical { color: var(--bad); }
+      .sev.medium { color: var(--warn); }
+      .sev.low { color: var(--ok); }
+
+      .muted { color: var(--muted); font-size: 12px; }
+
+      @media (max-width: 1020px) {
+        .form-grid { grid-template-columns: 1fr 120px 132px; }
+      }
+
+      @media (max-width: 860px) {
+        .topbar, .form-grid, .metrics, .layout { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>AI Project Reviewer</h1>
+          <p class="sub">Repository analysis, severity tracking, and fix suggestions from one review run.</p>
+        </div>
+        <div class="status-pill" id="status">Idle</div>
+      </header>
+
+      <section class="band">
+        <form id="review-form" class="form-grid">
+          <label>Repository URL
+            <input id="repo-url" type="url" required value="https://github.com/psf/requests">
+          </label>
+          <label>Max Files
+            <input id="max-files" type="number" min="1" max="100" value="10" required>
+          </label>
+          <button id="run-review" class="btn-primary" type="submit">Run Review</button>
+          <label>Load Review ID
+            <input id="review-id" type="text" placeholder="Paste review_id and click Load">
+          </label>
+          <button id="load-review" class="btn-secondary" type="button">Load</button>
+        </form>
+      </section>
+
+      <section class="metrics">
+        <article class="metric"><span class="key">Quality Score</span><strong class="val" id="score">-</strong></article>
+        <article class="metric"><span class="key">Files Analyzed</span><strong class="val" id="files">-</strong></article>
+        <article class="metric"><span class="key">Total Findings</span><strong class="val" id="findings">-</strong></article>
+        <article class="metric"><span class="key">Issue Density</span><strong class="val" id="density">-</strong></article>
+        <article class="metric"><span class="key">High Severity</span><strong class="val" id="high-sev">-</strong></article>
+        <article class="metric"><span class="key">Medium Severity</span><strong class="val" id="medium-sev">-</strong></article>
+      </section>
+
+      <section class="layout">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>AI Review Summary</h2>
+            <span class="muted" id="meta">No review loaded</span>
+          </div>
+          <div class="panel-body">
+            <pre id="summary">Run a review to populate analysis results.</pre>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head"><h2>Findings</h2></div>
+          <div class="panel-body">
+            <table>
+              <thead>
+                <tr><th>Severity</th><th>Location</th><th>Issue</th></tr>
+              </thead>
+              <tbody id="findings-table">
+                <tr><td colspan="3">No findings yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel" style="margin-top:12px;">
+        <div class="panel-head"><h2>Fix Suggestions</h2></div>
+        <div class="panel-body">
+          <table>
+            <thead>
+              <tr><th>Tier</th><th>Confidence</th><th>Location</th><th>Suggested Change</th></tr>
+            </thead>
+            <tbody id="fix-table">
+              <tr><td colspan="4">No fix suggestions yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const API_BASE = "http://127.0.0.1:8000";
+      const statusEl = document.querySelector("#status");
+      const summaryEl = document.querySelector("#summary");
+      const metaEl = document.querySelector("#meta");
+      const runBtn = document.querySelector("#run-review");
+      const loadBtn = document.querySelector("#load-review");
+
+      function setMetric(id, value) {
+        document.querySelector(id).textContent = value ?? "-";
+      }
+
+      function setStatus(label, tone) {
+        statusEl.textContent = label;
+        statusEl.style.borderColor = tone === "error" ? "#d8a9a2" : "#d6d0c5";
+        statusEl.style.background = tone === "error" ? "#fce9e7" : "#fffdf8";
+      }
+
+      function renderFindings(findings) {
+        const body = document.querySelector("#findings-table");
+        body.innerHTML = "";
+        if (!findings?.length) {
+          body.innerHTML = "<tr><td colspan='3'>No findings returned.</td></tr>";
+          return;
+        }
+
+        findings.slice(0, 18).forEach((f) => {
+          const row = document.createElement("tr");
+          const sevClass = String(f.severity || "low").toLowerCase();
+          row.innerHTML = `
+            <td><span class="sev ${sevClass}">${f.severity}</span></td>
+            <td>${f.file}:${f.line}</td>
+            <td>${f.message}</td>
+          `;
+          body.appendChild(row);
+        });
+      }
+
+      function renderFixes(fixes) {
+        const body = document.querySelector("#fix-table");
+        body.innerHTML = "";
+        if (!fixes?.length) {
+          body.innerHTML = "<tr><td colspan='4'>No fix suggestions returned.</td></tr>";
+          return;
+        }
+
+        fixes.slice(0, 20).forEach((s) => {
+          const snippet = s.suggested_code || "(generate with model-guided patch flow)";
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${s.tier}</td>
+            <td>${s.confidence}</td>
+            <td>${s.file}:${s.line}</td>
+            <td>${snippet}</td>
+          `;
+          body.appendChild(row);
+        });
+      }
+
+      function hydrateView(data) {
+        setMetric("#score", data.metrics?.quality_score);
+        setMetric("#files", data.metrics?.total_files_analyzed);
+        setMetric("#findings", data.metrics?.total_findings);
+        setMetric("#density", data.metrics?.issue_density_per_file);
+        setMetric("#high-sev", data.metrics?.severity_counts?.high ?? 0);
+        setMetric("#medium-sev", data.metrics?.severity_counts?.medium ?? 0);
+
+        renderFindings(data.findings);
+        renderFixes(data.fix_suggestions);
+
+        const rid = data.review_id || "not persisted";
+        metaEl.textContent = `Review ID: ${rid}`;
+        summaryEl.textContent = data.ai_review || "No summary returned.";
+      }
+
+      async function postReview(repoUrl, maxFiles) {
+        const resp = await fetch(`${API_BASE}/review`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ repo_url: repoUrl, max_files: Number(maxFiles) }),
+        });
+        if (!resp.ok) throw new Error(await resp.text());
+        return resp.json();
+      }
+
+      async function getReviewById(reviewId) {
+        const resp = await fetch(`${API_BASE}/review/${encodeURIComponent(reviewId)}`);
+        if (!resp.ok) throw new Error(await resp.text());
+        return resp.json();
+      }
+
+      document.querySelector("#review-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        setStatus("Running", "ok");
+        runBtn.disabled = true;
+
+        try {
+          const data = await postReview(
+            document.querySelector("#repo-url").value.trim(),
+            document.querySelector("#max-files").value
+          );
+          hydrateView(data);
+          document.querySelector("#review-id").value = data.review_id || "";
+          setStatus("Complete", "ok");
+        } catch (err) {
+          summaryEl.textContent = String(err);
+          setStatus("Error", "error");
+        } finally {
+          runBtn.disabled = false;
+        }
+      });
+
+      loadBtn.addEventListener("click", async () => {
+        const reviewId = document.querySelector("#review-id").value.trim();
+        if (!reviewId) {
+          setStatus("Missing ID", "error");
+          return;
+        }
+        loadBtn.disabled = true;
+        setStatus("Loading", "ok");
+        try {
+          const data = await getReviewById(reviewId);
+          hydrateView(data);
+          setStatus("Loaded", "ok");
+        } catch (err) {
+          summaryEl.textContent = String(err);
+          setStatus("Error", "error");
+        } finally {
+          loadBtn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
