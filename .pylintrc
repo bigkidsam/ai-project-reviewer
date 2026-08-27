@@ -1,0 +1,6 @@
+[MASTER]
+ignore=temp_repos,backend/temp_repos,frontend/node_modules
+jobs=1
+
+[MESSAGES CONTROL]
+disable=C0114,C0115,C0116

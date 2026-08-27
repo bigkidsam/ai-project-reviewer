@@ -2,20 +2,28 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.pytest_tmp/
 .mypy_cache/
 .ruff_cache/
+*.egg-info/
 .venv/
+.venv-*/
 venv/
 env/
-temp_repos/*
-backend/temp_repos/*
-backend/app/temp_repos/*
-backend/review_results/*
+node_modules/
+frontend/node_modules/
+frontend/dist/
+temp_repos/
+backend/temp_repos/
+backend/app/temp_repos/
 backend/*.log
-!backend/temp_repos/
-!backend/temp_repos/.gitkeep
-!backend/review_results/
-!backend/review_results/.gitkeep
+backend/review_results/*.json
+review_results/
+*.db
+*.sqlite
+backend/reviews.db
+reviews.db
+archive/
 
 # Environment files
 .env

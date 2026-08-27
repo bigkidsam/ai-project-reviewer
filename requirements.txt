@@ -3,5 +3,13 @@ uvicorn[standard]
 GitPython
 google-genai
 pylint
+bandit
+radon
+semgrep
 python-dotenv
 pytest
+pandas
+scikit-learn
+joblib
+sqlalchemy>=2.0.0
+

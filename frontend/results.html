@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Review Results — AI Project Reviewer</title>
+  <meta name="description" content="Detailed code review results with metrics, scorecard, findings, and AI summary." />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/animations.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "chart.js": "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/+esm"
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <nav class="nav" id="main-nav"></nav>
+
+  <main class="container page">
+    <!-- Loading state -->
+    <div id="page-loading" class="loading-overlay">
+      <div class="spinner" style="width: 36px; height: 36px;"></div>
+      <div>Loading review…</div>
+    </div>
+
+    <!-- Error state -->
+    <div id="page-error" class="hidden">
+      <div class="alert alert-error">
+        <strong>Error:</strong> <span id="error-msg"></span>
+      </div>
+      <a href="/review.html" class="btn btn-primary">Start New Review</a>
+    </div>
+
+    <!-- Results content -->
+    <div id="results-content" class="hidden">
+
+      <!-- 1. Header -->
+      <div class="section" data-animate>
+        <div class="flex-between">
+          <div>
+            <h1 class="page-title gradient-text" id="repo-name">—</h1>
+            <p class="page-subtitle">
+              <a id="repo-url-link" href="#" target="_blank">—</a>
+              &nbsp;·&nbsp; Review ID: <code id="review-id"
+                style="font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-muted);">—</code>
+              &nbsp;·&nbsp; <span id="review-date">—</span>
+            </p>
+          </div>
+          <div style="display: flex; gap: var(--space-2);">
+            <button class="btn btn-ghost btn-sm" id="export-json-btn" title="Export JSON">📋 JSON</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Score Gauge + Scorecard -->
+      <div class="section" id="scorecard-section" data-animate>
+        <h2 class="section-title">📊 Scorecard</h2>
+        <div style="display: grid; grid-template-columns: 1fr 200px; gap: var(--space-5); align-items: start;">
+          <div>
+            <div class="grid-4" id="scorecard-grid"></div>
+            <div class="chart-container mt-4" style="max-width: 420px; margin: 0 auto;">
+              <canvas id="radar-chart" width="400" height="400"></canvas>
+            </div>
+          </div>
+          <div class="weighted-total" id="weighted-total-card">
+            <div class="weighted-total-label">Weighted Total</div>
+            <div class="score-gauge" id="score-gauge"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Metrics Summary -->
+      <div class="section" data-animate>
+        <h2 class="section-title">📈 Metrics</h2>
+        <div class="grid-6" id="metrics-grid"></div>
+      </div>
+
+      <!-- 4. Severity & Category Breakdown -->
+      <div class="grid-2 section" data-animate>
+        <div class="card">
+          <div class="card-header">
+            <h2>Severity Breakdown</h2>
+          </div>
+          <div class="card-body">
+            <div class="chart-container" style="max-height: 260px;">
+              <canvas id="severity-chart" width="260" height="260"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h2>Category Breakdown</h2>
+          </div>
+          <div class="card-body">
+            <div style="height: 200px;">
+              <canvas id="category-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Repository Metadata -->
+      <div class="section" data-animate>
+        <div class="card">
+          <div class="card-header">
+            <h2>🔍 Repository Metadata</h2>
+          </div>
+          <div class="card-body">
+            <div class="info-grid" id="metadata-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. AI Review Summary -->
+      <div class="section" data-animate>
+        <div class="card" style="overflow: visible;">
+          <div class="card-header">
+            <h2>🤖 AI Review Summary</h2>
+          </div>
+          <div class="card-body" style="padding: 0;">
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot terminal-dot-red"></span>
+                <span class="terminal-dot terminal-dot-yellow"></span>
+                <span class="terminal-dot terminal-dot-green"></span>
+                <span class="terminal-title">ai-review-output</span>
+              </div>
+              <div class="terminal-body" id="ai-review-text">No summary available.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. Analyzed Files -->
+      <div class="section" data-animate>
+        <div class="card">
+          <div class="card-header">
+            <h2>📄 Analyzed Files</h2>
+            <span class="filter-count" id="files-count"></span>
+          </div>
+          <div class="card-body">
+            <div id="analyzed-files-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. Findings Table -->
+      <div class="section" data-animate>
+        <div class="card">
+          <div class="card-header">
+            <h2>⚠️ Findings</h2>
+            <div class="filter-bar">
+              <select class="filter-select" id="filter-severity" aria-label="Filter by severity">
+                <option value="">All Severities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              <select class="filter-select" id="filter-tool" aria-label="Filter by tool">
+                <option value="">All Tools</option>
+              </select>
+              <span class="filter-count" id="findings-count"></span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table id="findings-table">
+                <thead>
+                  <tr>
+                    <th style="width: 80px;">Severity</th>
+                    <th style="width: 70px;">Tool</th>
+                    <th style="width: 180px;">Location</th>
+                    <th style="width: 80px;">Code</th>
+                    <th>Message</th>
+                  </tr>
+                </thead>
+                <tbody id="findings-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. Fix Suggestions -->
+      <div class="section" data-animate>
+        <div class="card">
+          <div class="card-header">
+            <h2>🛠️ Fix Suggestions</h2>
+            <span class="filter-count" id="fixes-count"></span>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table id="fixes-table">
+                <thead>
+                  <tr>
+                    <th style="width: 100px;">Tier</th>
+                    <th style="width: 80px;">Confidence</th>
+                    <th style="width: 160px;">Location</th>
+                    <th>Problem</th>
+                    <th>Suggestion</th>
+                  </tr>
+                </thead>
+                <tbody id="fixes-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10. Raw Output (collapsible) -->
+      <div class="section" data-animate>
+        <div class="collapsible" id="raw-output-collapsible">
+          <div class="collapsible-header" id="raw-output-toggle">
+            <span>📜 Raw Analyzer Output</span>
+            <span class="collapsible-arrow">▼</span>
+          </div>
+          <div class="collapsible-body">
+            <pre class="code-block" id="raw-output" style="max-height: 600px;"></pre>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script type="module" src="/js/results.js?v=2.0"></script>
+</body>
+
+</html>

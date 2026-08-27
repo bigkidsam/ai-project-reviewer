@@ -1,4 +1,12 @@
-import os
+import json
+import time
+
+from ...core.config import settings
+from ...training.model_predictor import predict_quality_label
+
+
+MAX_ISSUES_CHARS = 6000
+MAX_FINDINGS = 20
 
 
 def _quality_label(score: int | float) -> str:
@@ -26,6 +34,82 @@ def _top_findings(findings: list[dict], limit: int = 5) -> str:
         lines.append(f"- {severity}: {file_name}:{line} [{symbol}] {message}")
 
     return "\n".join(lines)
+
+
+def _safe_json(data: object) -> str:
+    return json.dumps(data, indent=2, sort_keys=True, default=str)
+
+
+def _build_llm_prompt(
+    metrics: dict,
+    issues_text: str,
+    findings: list[dict],
+    repository_metadata: dict,
+    model_prediction: str | None,
+) -> str:
+    repo_name = repository_metadata.get("name", "repository")
+    prompt_payload = {
+        "repository": repository_metadata,
+        "metrics": metrics,
+        "local_quality_model_prediction": model_prediction,
+        "top_findings": findings[:MAX_FINDINGS],
+        "analyzer_output_preview": issues_text[:MAX_ISSUES_CHARS],
+    }
+
+    return f"""You are a senior software engineer reviewing a Python repository.
+
+Write a practical, concise code review for the repository named "{repo_name}".
+Use the metrics and analyzer findings as evidence. Do not invent files, line
+numbers, dependencies, or vulnerabilities that are not present in the input.
+
+Return the review in this exact structure:
+
+AI REVIEW SUMMARY
+
+Repository Quality:
+
+Most Important Findings:
+
+Recommended Fix Order:
+
+Testing Recommendations:
+
+Final Notes:
+
+Input data:
+{_safe_json(prompt_payload)}
+"""
+
+
+def _generate_gemini_review(
+    prompt: str,
+    api_key: str,
+    model: str,
+) -> str | None:
+    try:
+        from google import genai
+    except ImportError:
+        return None
+    # Attempt the generation with retries/backoff for transient failures
+    max_attempts = 3
+    delay = 1
+    for attempt in range(1, max_attempts + 1):
+        try:
+            client = genai.Client(api_key=api_key)
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt,
+            )
+            text = getattr(response, "text", None)
+            if text:
+                return str(text).strip()
+            # If no text returned, treat as transient and retry
+            raise RuntimeError("Empty response from LLM")
+        except Exception:
+            if attempt == max_attempts:
+                return None
+            time.sleep(delay)
+            delay *= 2
 
 
 def _generate_rule_based_review(
@@ -85,24 +169,46 @@ def generate_ai_review(
 ) -> str:
     """Generate a review summary.
 
-    This function is intentionally deterministic by default so the pipeline
-    works without external API credentials. A hosted LLM can be added here later
-    without changing API or CLI callers.
+    This function prefers Gemini when configured, includes the local quality
+    classifier's prediction as context, and falls back to a deterministic
+    summary when the external LLM is unavailable.
     """
     findings = findings or []
     repository_metadata = repository_metadata or {}
 
-    if not os.getenv("GEMINI_API_KEY"):
-        return _generate_rule_based_review(
-            metrics=metrics,
-            issues_text=issues_text,
-            findings=findings,
-            repository_metadata=repository_metadata,
-        )
-
-    return _generate_rule_based_review(
+    quality_label = predict_quality_label(metrics)
+    fallback_summary = _generate_rule_based_review(
         metrics=metrics,
         issues_text=issues_text,
         findings=findings,
         repository_metadata=repository_metadata,
     )
+
+    if settings.use_external_llm and settings.gemini_api_key:
+        prompt = _build_llm_prompt(
+            metrics=metrics,
+            issues_text=issues_text,
+            findings=findings,
+            repository_metadata=repository_metadata,
+            model_prediction=quality_label,
+        )
+        llm_review = _generate_gemini_review(
+            prompt=prompt,
+            api_key=settings.gemini_api_key,
+            model=settings.gemini_model,
+        )
+        if llm_review:
+            if quality_label:
+                return (
+                    llm_review
+                    + f"\n\nLOCAL MODEL PREDICTION: repository quality appears to be {quality_label.upper()}."
+                )
+            return llm_review
+
+    if quality_label:
+        return (
+            fallback_summary
+            + f"\n\nLOCAL MODEL PREDICTION: repository quality appears to be {quality_label.upper()}."
+        )
+
+    return fallback_summary

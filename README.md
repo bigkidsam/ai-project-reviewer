@@ -4,6 +4,9 @@ AI Project Reviewer is a FastAPI backend for reviewing GitHub repositories. It
 clones a repository, runs static analysis on Python files, calculates basic
 quality metrics, and generates an AI-assisted review summary with Gemini.
 
+[![CI](https://github.com/bigkidsam/ai-project-reviewer/actions/workflows/ci.yml/badge.svg)](https://github.com/bigkidsam/ai-project-reviewer/actions/workflows/ci.yml)
+[![Codecov](https://codecov.io/gh/bigkidsam/ai-project-reviewer/branch/main/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/bigkidsam/ai-project-reviewer)
+
 ## Setup
 
 ```bash
@@ -14,6 +17,8 @@ Add your Gemini API key in `.env`:
 
 ```bash
 GEMINI_API_KEY=your-valid-gemini-api-key
+GEMINI_MODEL=gemini-2.5-flash
+USE_EXTERNAL_LLM=true
 ```
 
 ## Run Backend

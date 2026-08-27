@@ -1,10 +1,13 @@
 import argparse
+import logging
 import os
 
 try:
     from services.code_review.reviewer import run_repository_review
 except ModuleNotFoundError:
     from app.services.code_review.reviewer import run_repository_review
+
+logger = logging.getLogger(__name__)
 
 
 def parse_args() -> argparse.Namespace:
@@ -29,18 +32,18 @@ def main() -> int:
     try:
         review = run_repository_review(args.repo_url, max_files=args.max_files)
     except RuntimeError as exc:
-        print(f"Repository fetch failed: {exc}")
+        logging.basicConfig()
+        logger.error("Repository fetch failed: %s", exc)
         return 1
+    logging.basicConfig()
+    logger.info("Repository metadata: %s", review["repository_metadata"])
+    logger.info("Analyzed files: %s", len(review["analyzed_files"]))
 
-    print(f"\nRepository metadata: {review['repository_metadata']}")
-    print(f"Analyzed files: {len(review['analyzed_files'])}")
+    logger.info("Final Metrics:")
+    logger.info("%s", review["metrics"])
+    logger.info("Structured findings: %s", len(review["findings"]))
 
-    print("\nFinal Metrics:")
-    print(review["metrics"])
-    print(f"\nStructured findings: {len(review['findings'])}")
-
-    print("\nAI REVIEW:\n")
-    print(review["ai_review"])
+    logger.info("AI REVIEW:\n%s", review["ai_review"])
     return 0
 
 

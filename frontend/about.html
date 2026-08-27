@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About — AI Project Reviewer</title>
+    <meta name="description" content="Learn how the AI Project Reviewer works — analysis pipeline, tools, and scorecard." />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/animations.css" />
+  </head>
+  <body>
+    <nav class="nav" id="main-nav"></nav>
+
+    <main class="container page" style="max-width: 920px;">
+      <div data-animate>
+        <h1 class="page-title gradient-text">How It Works</h1>
+        <p class="page-subtitle">Understand the multi-stage analysis pipeline, static analyzers, and intelligent scoring model.</p>
+      </div>
+
+      <!-- Pipeline Overview -->
+      <div class="card section" data-animate>
+        <div class="card-header"><h2>🔄 8-Stage Analysis Pipeline</h2></div>
+        <div class="card-body">
+          <div class="pipeline">
+            <div class="pipeline-step">
+              <div class="pipeline-step-number">1</div>
+              <div class="pipeline-step-title">Repository Fetch & Unpack</div>
+              <div class="pipeline-step-desc">Clones public GitHub repositories with depth=1 shallow clone, or decompresses uploaded ZIP/TAR archives securely in sandbox directories.</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="pipeline-step-number">2</div>
+              <div class="pipeline-step-title">Discovery & Filter Gate</div>
+              <div class="pipeline-step-desc">Discovers supported code files (Python, JS, TS, Java) while automatically pruning virtual environments, node_modules, cache dirs, and binaries &gt;250KB.</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="pipeline-step-number">3</div>
+              <div class="pipeline-step-title">Multi-Tool Static Analysis</div>
+              <div class="pipeline-step-desc">Runs AST syntax parser as an immediate gate, followed by Pylint, Bandit, Radon, ESLint, and Semgrep security checkers in parallel.</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="pipeline-step-number">4</div>
+              <div class="pipeline-step-title">Metrics Aggregation</div>
+              <div class="pipeline-step-desc">Aggregates findings into severity counts (critical/high/medium/low), categories (security/bug_risk/maintainability/style), and issue density per file.</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="pipeline-step-number">5</div>
+              <div class="pipeline-step-title">8-Category Weighted Scorecard</div>
+              <div class="pipeline-step-desc">Computes weighted scores spanning Code Quality (20%), Architecture (15%), Documentation (10%), Security (15%), Performance (10%), UI/UX (10%), Innovation (10%), and Testing (10%).</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="pipeline-step-number">6</div>
+              <div class="pipeline-step-title">Tiered Fix Suggestions</div>
+              <div class="pipeline-step-desc">Generates deterministic rule-based code replacements for frequent issues (unused imports, missing timeouts) and flags complex bugs for model guidance.</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="pipeline-step-number">7</div>
+              <div class="pipeline-step-title">AI Summary Synthesis</div>
+              <div class="pipeline-step-desc">Sends aggregated findings to Google Gemini for a natural-language executive summary, key risks, and architectural takeaways with rule-based fallback.</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="pipeline-step-number">8</div>
+              <div class="pipeline-step-title">Self-Learning Quality Classifier</div>
+              <div class="pipeline-step-desc">A local Scikit-Learn Random Forest model predicts quality classification and auto-retrains asynchronously on new reviews.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tools -->
+      <div class="card section" data-animate>
+        <div class="card-header"><h2>🧰 Integrated Analysis Engines</h2></div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Engine</th>
+                  <th>Language</th>
+                  <th>Core Focus</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><strong style="color: var(--color-primary);">Pylint</strong></td><td>Python</td><td>Code smells, PEP8 style, syntax anomalies, unused references</td></tr>
+                <tr><td><strong style="color: var(--sev-critical);">Bandit</strong></td><td>Python</td><td>Security vulnerabilities, injection vectors, insecure configs</td></tr>
+                <tr><td><strong style="color: var(--sev-medium);">Radon</strong></td><td>Python</td><td>Cyclomatic complexity, Halstead metrics, maintainability index</td></tr>
+                <tr><td><strong style="color: var(--color-accent);">ESLint</strong></td><td>JS / TS</td><td>JavaScript/TypeScript static code analysis & modern standards</td></tr>
+                <tr><td><strong style="color: var(--tier-model);">Semgrep</strong></td><td>Polyglot</td><td>Semantic pattern-matching for high-confidence security findings</td></tr>
+                <tr><td><strong style="color: var(--color-success);">AST Parser</strong></td><td>Python</td><td>Native abstract syntax tree validation and syntax error gating</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Severity Levels -->
+      <div class="card section" data-animate>
+        <div class="card-header"><h2>🚨 Severity Weighting & Impact</h2></div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Severity</th><th>Prefix / Code</th><th>Penalty Weight</th><th>Impact Definition</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><span class="badge badge-critical">Critical</span></td><td>Fatal (F)</td><td>10 pts</td><td>Fatal execution bugs, syntax corruption, unparsable AST</td></tr>
+                <tr><td><span class="badge badge-high">High</span></td><td>Error (E)</td><td>7 pts</td><td>Undefined variables, import failures, critical logic flaws</td></tr>
+                <tr><td><span class="badge badge-medium">Medium</span></td><td>Warning (W)</td><td>3 pts</td><td>Unused variables, missing HTTP timeouts, bad exception handling</td></tr>
+                <tr><td><span class="badge badge-low">Low</span></td><td>Convention (C, R)</td><td>1 pt</td><td>Formatting inconsistencies, refactoring recommendations, docstrings</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="form-hint mt-4">
+            Quality Score formula: <code>Score = max(0, 100 - Σ(severity_count × weight))</code>
+          </p>
+        </div>
+      </div>
+
+      <!-- Scorecard Categories -->
+      <div class="card section" data-animate>
+        <div class="card-header"><h2>📊 Scorecard Criteria</h2></div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Dimension</th><th>Weight</th><th>Evaluation Logic</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>Code Quality</strong></td><td>20%</td><td>Direct static analysis quality metric scaled (0-100)</td></tr>
+                <tr><td><strong>Architecture</strong></td><td>15%</td><td>Layer separation: Backend (+40), Frontend (+30), Docs (+15), Tests (+15)</td></tr>
+                <tr><td><strong>Documentation</strong></td><td>10%</td><td>README existence (+50), docs/ folder (+30), README content &gt;200 chars (+20)</td></tr>
+                <tr><td><strong>Security</strong></td><td>15%</td><td>100 base score minus 15 pts per detected security finding</td></tr>
+                <tr><td><strong>Performance</strong></td><td>10%</td><td>100 base score minus 20 pts per high cyclomatic complexity function</td></tr>
+                <tr><td><strong>UI / UX</strong></td><td>10%</td><td>Presence of web UI, templates, or frontend asset structure</td></tr>
+                <tr><td><strong>Innovation</strong></td><td>10%</td><td>ML / AI components (+40), prompt engineering / pipelines (+40), notebooks (+20)</td></tr>
+                <tr><td><strong>Testing</strong></td><td>10%</td><td>Test coverage proxy scaled by test file density (capped at 100)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-6" data-animate>
+        <a href="/review.html" class="btn btn-primary" style="padding: var(--space-3) var(--space-8); font-size: var(--font-size-md);">
+          🚀 Try A Code Review Now
+        </a>
+      </div>
+    </main>
+
+    <script type="module" src="/js/about.js"></script>
+  </body>
+</html>

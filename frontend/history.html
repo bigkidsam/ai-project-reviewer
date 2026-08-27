@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Review History — AI Project Reviewer</title>
+    <meta name="description" content="Browse past code review results." />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/animations.css" />
+  </head>
+  <body>
+    <nav class="nav" id="main-nav"></nav>
+
+    <main class="container page">
+      <div class="flex-between mb-4" data-animate>
+        <div>
+          <h1 class="page-title">Review History</h1>
+          <p class="page-subtitle">Your past review results, stored locally in this browser.</p>
+        </div>
+        <button class="btn btn-danger btn-sm" id="clear-history-btn">🗑️ Clear All</button>
+      </div>
+
+      <!-- Search -->
+      <div class="search-bar" data-animate>
+        <span class="search-bar-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search by repository name or URL…" />
+      </div>
+
+      <!-- Sort Controls -->
+      <div class="flex-between mb-4" data-animate>
+        <div class="filter-bar">
+          <select class="filter-select" id="sort-select" aria-label="Sort reviews">
+            <option value="date-desc">Newest First</option>
+            <option value="date-asc">Oldest First</option>
+            <option value="score-desc">Highest Score</option>
+            <option value="score-asc">Lowest Score</option>
+            <option value="findings-desc">Most Findings</option>
+          </select>
+          <span class="filter-count" id="history-count-display"></span>
+        </div>
+      </div>
+
+      <!-- History Cards -->
+      <div id="history-content" data-animate>
+        <!-- Rendered by JS -->
+      </div>
+    </main>
+
+    <script type="module" src="/js/history.js"></script>
+  </body>
+</html>
