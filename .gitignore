@@ -37,3 +37,8 @@ archive/
 # OS files
 Thumbs.db
 .DS_Store
+~$*
+*.tmp
+
+# Datasets & initial references
+Project_CodeNet-initial/
